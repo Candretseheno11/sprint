@@ -19,12 +19,13 @@ cd "$(dirname "$0")"
 
 bash build.sh
 
+
 APP_DIR="$TOMCAT_HOME/webapps/sprint"
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/WEB-INF/classes"
 
 cp -r build/main "$APP_DIR/WEB-INF/classes/"
-cp webapp/WEB-INF/web.xml "$APP_DIR/WEB-INF/web.xml"
+cp -r webapp/* "$APP_DIR/"
 
 echo "Projet déployé dans $APP_DIR"
 echo "Lance Tomcat avec: $TOMCAT_HOME/bin/startup.sh"

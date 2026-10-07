@@ -32,7 +32,7 @@ public class FrontControllerServlet extends HttpServlet {
         viewFormat = viewPrefix + "%s" + viewSuffix;
 
 
-        
+
             ServletContext context = this.getServletContext();
         actions = (Map<UrlInfo, UrlMapping>) context.getAttribute("actions");
     }
@@ -50,15 +50,32 @@ public class FrontControllerServlet extends HttpServlet {
     public void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        UrlInfo urlInfo = new UrlInfo(HttpMethod.valueOf(request.getMethod()), request.getServletPath());
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        if (path.isEmpty() || "/".equals(path)) {
+            path = "/";
+        }
+        if (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        UrlInfo urlInfo = new UrlInfo(HttpMethod.valueOf(request.getMethod()), path);
 
         UrlMapping mapping = actions.get(urlInfo);
         if (actions.containsKey(urlInfo)) {
 
              try {
                 Object controller = mapping.getController().getDeclaredConstructor().newInstance();
-                 Object returnValue = mapping.getMethod().invoke(controller);
+                 
+                Object[] args = new Object[mapping.getMethod().getParameterCount()];
+                Class<?>[] argsTypes = mapping.getMethod().getParameterTypes();
+                for (int i = 0; i < args.length; i++) {
+                    Class<?> type = argsTypes[i];
+                    if (type.equals(ServletContext.class)) {
+                        args[i] = getServletContext();
+                    }
+                }
 
+                Object returnValue = mapping.getMethod().invoke(controller, args);
                 if (returnValue instanceof ModelAndView) {
                     ModelAndView mav = (ModelAndView) returnValue;
 
