@@ -12,14 +12,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
+import main.java.dev.sprint.constant.HttpMethod;
 import main.java.dev.sprint.UrlMapping;
 import  main.java.dev.sprint.Utils;
 import  main.java.dev.sprint.annotation.Controller;
 import  main.java.dev.sprint.annotation.Url;
-
 public class FrontControllerServlet extends HttpServlet {
 
-    private Map<String, UrlMapping> actions;
+    private Map<UrlInfo, UrlMapping> actions;
 
     @Override
     public void init() throws ServletException {
@@ -28,7 +28,7 @@ public class FrontControllerServlet extends HttpServlet {
 
         try {
             Utils.findMethodsByAnnotation(basePackages.split(";"), Controller.class, Url.class, (method) -> {
-                String url = ((Url) method.getAnnotation(Url.class)).value();
+                UrlInfo url = new UrlInfo((Url) method.getAnnotation(Url.class));
                 actions.put(url, new UrlMapping(url, method));
             });
         }
@@ -55,9 +55,11 @@ public class FrontControllerServlet extends HttpServlet {
         out.println("<head><title>TKSpring</title></head>");
         out.println("<body>");
 
-        if (actions.containsKey(request.getServletPath())) {
-            UrlMapping mapping = actions.get(request.getServletPath());
-            out.println("<h1>Ça marche!</h1>");
+        UrlInfo urlInfo = new UrlInfo(HttpMethod.valueOf(request.getMethod()), request.getServletPath());
+
+        if (actions.containsKey(urlInfo)) {
+     UrlMapping mapping = actions.get(urlInfo);
+                 out.println("<h1>Ça marche!</h1>");
             out.println("<p><strong>Méthode:</strong> " + request.getMethod() + "</p>");
             out.println("<p><strong>Route:</strong> " + request.getServletPath() + "</p>");
             out.println("<p><strong>Action:</strong> " + mapping.getController().getName() + "::" + mapping.getMethod().getName() + "</p>");
@@ -67,9 +69,9 @@ public class FrontControllerServlet extends HttpServlet {
             out.println("<p>");
             out.println("<strong>Actions connues:</strong>");
             out.println("<ul>");
-            for (String url : actions.keySet()) {
+            for (UrlInfo url : actions.keySet()) {
                 UrlMapping mapping = actions.get(url);
-                out.println("<li>" + url + " → " + mapping.getController().getName() + "::" + mapping.getMethod().getName() + "</li>");
+                out.println("<li>" + url.getUrl() + " → " + mapping.getController().getName() + "::" + mapping.getMethod().getName() + "</li>");
             }
             out.println("</ul>");
             out.println("</p>");
