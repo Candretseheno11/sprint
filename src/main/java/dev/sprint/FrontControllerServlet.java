@@ -29,7 +29,7 @@ public class FrontControllerServlet extends HttpServlet {
         try {
             Utils.findMethodsByAnnotation(basePackages.split(";"), Controller.class, Url.class, (method) -> {
                 UrlInfo url = new UrlInfo((Url) method.getAnnotation(Url.class));
-                actions.put(url, new UrlMapping(url, method));
+                actions.put(url, new UrlMapping(url.getUrl(), method));
             });
         }
         catch (Exception e) {
@@ -57,9 +57,18 @@ public class FrontControllerServlet extends HttpServlet {
 
         UrlInfo urlInfo = new UrlInfo(HttpMethod.valueOf(request.getMethod()), request.getServletPath());
 
+        UrlMapping mapping = actions.get(urlInfo);
         if (actions.containsKey(urlInfo)) {
-     UrlMapping mapping = actions.get(urlInfo);
-                 out.println("<h1>Ça marche!</h1>");
+
+             try {
+                Object controller = mapping.getController().getDeclaredConstructor().newInstance();
+                mapping.getMethod().invoke(controller);
+            }
+            catch (Exception e) {
+                throw new ServletException(e);
+            }
+
+            out.println("<h1>Ça marche!</h1>");
             out.println("<p><strong>Méthode:</strong> " + request.getMethod() + "</p>");
             out.println("<p><strong>Route:</strong> " + request.getServletPath() + "</p>");
             out.println("<p><strong>Action:</strong> " + mapping.getController().getName() + "::" + mapping.getMethod().getName() + "</p>");
@@ -70,8 +79,8 @@ public class FrontControllerServlet extends HttpServlet {
             out.println("<strong>Actions connues:</strong>");
             out.println("<ul>");
             for (UrlInfo url : actions.keySet()) {
-                UrlMapping mapping = actions.get(url);
-                out.println("<li>" + url.getUrl() + " → " + mapping.getController().getName() + "::" + mapping.getMethod().getName() + "</li>");
+                UrlMapping routeMapping = actions.get(url);
+                out.println("<li>" + url.getUrl() + " → " + routeMapping.getController().getName() + "::" + routeMapping.getMethod().getName() + "</li>");
             }
             out.println("</ul>");
             out.println("</p>");
