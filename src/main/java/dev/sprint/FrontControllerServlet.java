@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import main.java.dev.sprint.ModelAndView;
@@ -14,7 +16,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-
+import main.java.dev.sprint.annotation.AsJson;
 import main.java.dev.sprint.constant.HttpMethod;
 import main.java.dev.sprint.UrlMapping;
 import  main.java.dev.sprint.Utils;
@@ -76,17 +78,32 @@ public class FrontControllerServlet extends HttpServlet {
                 }
 
                 Object returnValue = mapping.getMethod().invoke(controller, args);
-                if (returnValue instanceof ModelAndView) {
-                    ModelAndView mav = (ModelAndView) returnValue;
-
-                    for (Map.Entry<String, Object> entry : mav.getModel().entrySet()) {
-                        request.setAttribute(entry.getKey(), entry.getValue());
+             
+                if (mapping.getMethod().isAnnotationPresent(AsJson.class)) {
+                    AsJson asJson = (AsJson) mapping.getMethod().getAnnotation(AsJson.class);
+                   response.setContentType("application/json");
+                    PrintWriter out = response.getWriter();
+                    if (asJson.raw()) {
+                        out.print(returnValue);
                     }
+                    else {
+                        Gson gson = new Gson();
+                        out.print(gson.toJson(returnValue));
+                    }
+                }
+                else {
+                    if (returnValue instanceof ModelAndView) {
+                        ModelAndView mav = (ModelAndView) returnValue;
 
-                    RequestDispatcher dispatcher = request.getRequestDispatcher(
-                        String.format(viewFormat, mav.getView())
-                    );
-                    dispatcher.forward(request, response);
+                        for (Map.Entry<String, Object> entry : mav.getModel().entrySet()) {
+                            request.setAttribute(entry.getKey(), entry.getValue());
+                        }
+
+                        RequestDispatcher dispatcher = request.getRequestDispatcher(
+                            String.format(viewFormat, mav.getView())
+                        );
+                        dispatcher.forward(request, response);
+                    }
                 }
             }
             catch (Exception e) {
