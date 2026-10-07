@@ -19,6 +19,7 @@ cd "$(dirname "$0")"
 
 bash build.sh
 
+
 APP_DIR="$TOMCAT_HOME/webapps/sprint"
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/WEB-INF/classes"
