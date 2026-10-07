@@ -31,6 +31,8 @@ public class FrontControllerServlet extends HttpServlet {
         String viewSuffix = this.getInitParameter("view-suffix");
         viewFormat = viewPrefix + "%s" + viewSuffix;
 
+
+        
             ServletContext context = this.getServletContext();
         actions = (Map<UrlInfo, UrlMapping>) context.getAttribute("actions");
     }
