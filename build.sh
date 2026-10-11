@@ -11,7 +11,7 @@ rm -rf $BUILD_DIR
 
 # Compilation des fichiers Java
 find $SRC_DIR -name "*.java" > sources.txt
-javac -cp "$LIB_DIR/*" -d $BUILD_DIR @sources.txt
+javac --release 17 -cp "$LIB_DIR/*" -d $BUILD_DIR @sources.txt
 rm sources.txt
 
 # Génération du fichier .jar
