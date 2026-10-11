@@ -112,7 +112,7 @@ public class FrontControllerServlet extends HttpServlet {
 
      }
         else {
-              response.setContentType("text/html");
+             response.setContentType("text/html");
             PrintWriter out = response.getWriter();
             out.println("<html>");
             out.println("<head><title>Sprint</title></head>");
@@ -129,8 +129,7 @@ public class FrontControllerServlet extends HttpServlet {
             out.println("</p>");
 
             out.println("</body>");
-            out.println("</html>");
-        }
+            out.println("</html>");  }
 
     }
 }
