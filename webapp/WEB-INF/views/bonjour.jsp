@@ -4,7 +4,8 @@
     <title>Bonjour Sprint</title>
 </head>
 <body>
-    <h1>Bonjour</h1>
-    <p>${message}</p>
+    <h1>Inscription reçue</h1>
+    <p>Nom : ${nom}</p>
+    <p>Email : ${email}</p>
 </body>
 </html>

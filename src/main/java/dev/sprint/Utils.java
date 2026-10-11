@@ -3,16 +3,35 @@ package main.java.dev.sprint;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
 public class Utils {
+
+    public static String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (char character : value.toCharArray()) {
+            switch (character) {
+                case '&' -> escaped.append("&amp;");
+                case '<' -> escaped.append("&lt;");
+                case '>' -> escaped.append("&gt;");
+                case '"' -> escaped.append("&quot;");
+                case '\'' -> escaped.append("&#39;");
+                default -> escaped.append(character);
+            }
+        }
+        return escaped.toString();
+    }
 
     public static void findMethodsByAnnotation(
             String[] packages,

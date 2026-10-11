@@ -17,6 +17,8 @@ public class TestController {
         return modelAndView;
     }
 
+
+
     @Url(value = "/api/voiture", method = HttpMethod.GET)
     @AsJson
     public List<String> getVoitureJson() {
@@ -34,20 +36,15 @@ public class TestController {
     }
 
     @Url(value = "/api/test", method = HttpMethod.GET)
-    public String getFormulaire() {
-        return """
-                <!DOCTYPE html>
-                <html lang="fr">
-                <head><meta charset="UTF-8"><title>Formulaire</title></head>
-                <body>
-                    <h1>Inscription</h1>
-                    <form action="/api/test" method="post">
-                        <input type="text" name="nom" placeholder="Votre nom" required>
-                        <input type="email" name="email" placeholder="Votre email" required>
-                        <button type="submit">Envoyer</button>
-                    </form>
-                </body>
-                </html>
-                """;
+    public ModelAndView getFormulaire() {
+        return new ModelAndView("formulaire");
+    }
+
+    @Url(value = "/api/test", method = HttpMethod.POST)
+    public ModelAndView enregistrer(String nom, String email) {
+        ModelAndView modelAndView = new ModelAndView("bonjour");
+        modelAndView.set("nom", Utils.parse(nom, String.class));
+        modelAndView.set("email", Utils.parse(email, String.class));
+        return modelAndView;
     }
 }
