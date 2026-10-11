@@ -3,7 +3,6 @@ package main.java.dev.sprint;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
-import java.lang.reflect.Array;
 import java.lang.reflect.Parameter;
 import com.google.gson.Gson;
 import java.util.Map;
@@ -15,6 +14,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import main.java.dev.sprint.annotation.AsJson;
+import main.java.dev.sprint.annotation.Bind;
 import main.java.dev.sprint.constant.HttpMethod;
 import main.java.dev.sprint.UrlMapping;
 import main.java.dev.sprint.Utils;
@@ -78,13 +78,15 @@ public class FrontControllerServlet extends HttpServlet {
                         mArgs[i] = request;
                     } else if (mpType.equals(HttpServletResponse.class)) {
                         mArgs[i] = response;
+                    } else if (methodParameters[i].isAnnotationPresent(Bind.class)) {
+                        mArgs[i] = Utils.bindObject(requestParameters, mpType);
                     } else {
                         String[] rpValues = requestParameters.get(mpName);
                         if (mpType.isArray()) {
                             int rpLength = rpValues == null ? 0 : rpValues.length;
-                            Object objs = Array.newInstance(mpType.getComponentType(), rpLength);
+                            Object objs = java.lang.reflect.Array.newInstance(mpType.getComponentType(), rpLength);
                             for (int j = 0; j < rpLength; j++) {
-                                Array.set(objs, j, Utils.parse(rpValues[j], mpType.getComponentType()));
+                                java.lang.reflect.Array.set(objs, j, Utils.parse(rpValues[j], mpType.getComponentType()));
                             }
                             mArgs[i] = objs;
                         } else {

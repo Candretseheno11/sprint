@@ -3,6 +3,7 @@ package main.java.dev.sprint;
 import java.util.ArrayList;
 import java.util.List;
 import main.java.dev.sprint.annotation.AsJson;
+import main.java.dev.sprint.annotation.Bind;
 import main.java.dev.sprint.annotation.Controller;
 import main.java.dev.sprint.annotation.Url;
 import main.java.dev.sprint.constant.HttpMethod;
@@ -41,10 +42,15 @@ public class TestController {
     }
 
     @Url(value = "/api/test", method = HttpMethod.POST)
-    public ModelAndView enregistrer(String nom, String email) {
-        ModelAndView modelAndView = new ModelAndView("bonjour");
-        modelAndView.set("nom", Utils.parse(nom, String.class));
-        modelAndView.set("email", Utils.parse(email, String.class));
-        return modelAndView;
+    @AsJson 
+    public List<String> enregistrer( @Bind  Inscription inscription) {
+        List<String> info = new ArrayList<>();
+        info.add(inscription.getNom());
+        info.add(inscription.getEmail());
+
+      //  ModelAndView modelAndView = new ModelAndView("bonjour");
+      //  modelAndView.set("nom", inscription.getNom());
+      //  modelAndView.set("email", inscription.getEmail());
+        return info;
     }
 }

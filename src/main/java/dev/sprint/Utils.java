@@ -1,7 +1,10 @@
 package main.java.dev.sprint;
 
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -10,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 public class Utils {
@@ -126,5 +130,33 @@ public class Utils {
         catch (Exception e) {
             return type.isPrimitive() ? 0 : null;
         }
+    }
+
+    public static Object bindObject(Map<String, String[]> requestParameters, Class<?> type) throws Exception {
+        Object object = type.getDeclaredConstructor().newInstance();
+
+        for (PropertyDescriptor property : Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors()) {
+            Method setter = property.getWriteMethod();
+            String[] values = requestParameters.get(property.getName());
+            if (setter == null || values == null || values.length == 0) {
+                continue;
+            }
+
+            Class<?> propertyType = property.getPropertyType();
+            Object value;
+            if (propertyType.isArray()) {
+                Class<?> componentType = propertyType.getComponentType();
+                Object array = Array.newInstance(componentType, values.length);
+                for (int i = 0; i < values.length; i++) {
+                    Array.set(array, i, parse(values[i], componentType));
+                }
+                value = array;
+            } else {
+                value = parse(values[0], propertyType);
+            }
+            setter.invoke(object, value);
+        }
+
+        return object;
     }
 }
