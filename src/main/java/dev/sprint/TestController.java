@@ -1,6 +1,10 @@
 package main.java.dev.sprint;
 
+import java.io.IOException;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import java.util.ArrayList;
 import java.util.List;
 import main.java.dev.sprint.annotation.AsJson;
@@ -40,6 +44,42 @@ public class TestController {
     @Url(value = "/api/test", method = HttpMethod.GET)
     public ModelAndView getFormulaire() {
         return new ModelAndView("formulaire");
+    }
+
+    @Url(value = "/upload", method = HttpMethod.GET)
+    public ModelAndView afficherUpload() {
+        return new ModelAndView("upload");
+    }
+
+    @Url(value = "/upload", method = HttpMethod.POST)
+    public ModelAndView uploader(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        ModelAndView modelAndView = new ModelAndView("upload");
+        Part part;
+        try {
+            part = request.getPart("file");
+        } catch (IllegalStateException exception) {
+            response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
+            modelAndView.set("erreur", "Le fichier dépasse la taille maximale de 10 Mo.");
+            return modelAndView;
+        }
+
+        if (part == null || part.getSize() == 0) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            modelAndView.set("erreur", "Veuillez sélectionner un fichier non vide.");
+            return modelAndView;
+        }
+
+        try {
+            UploadedFile uploadedFile = Files.save(part);
+            modelAndView.set("fichier", uploadedFile);
+            modelAndView.set("nomAffiche", Utils.escapeHtml(uploadedFile.getOriginalName()));
+            modelAndView.set("typeAffiche", Utils.escapeHtml(uploadedFile.getContentType()));
+        } catch (IllegalArgumentException exception) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            modelAndView.set("erreur", exception.getMessage());
+        }
+        return modelAndView;
     }
 
     @Url(value = "/api/test", method = HttpMethod.POST)
