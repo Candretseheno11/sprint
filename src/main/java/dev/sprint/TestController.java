@@ -1,5 +1,6 @@
 package main.java.dev.sprint;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import main.java.dev.sprint.annotation.AsJson;
@@ -52,5 +53,35 @@ public class TestController {
       //  modelAndView.set("nom", inscription.getNom());
       //  modelAndView.set("email", inscription.getEmail());
         return info;
+    }
+
+    @Url(value = "/session", method = HttpMethod.GET)
+    public ModelAndView afficherSession(HttpServletRequest request) {
+        return creerVueSession(request, null);
+    }
+
+    @Url(value = "/session/login", method = HttpMethod.POST)
+    public ModelAndView connecter(String nom, HttpServletRequest request) {
+        if (nom == null || nom.isBlank()) {
+            return creerVueSession(request, "Veuillez saisir un nom.");
+        }
+
+        new Session(request).connect(nom);
+        return creerVueSession(request, null);
+    }
+
+    @Url(value = "/session/logout", method = HttpMethod.POST)
+    public ModelAndView deconnecter(HttpServletRequest request) {
+        new Session(request).disconnect();
+        return new ModelAndView("session");
+    }
+
+    private ModelAndView creerVueSession(HttpServletRequest request, String erreur) {
+        ModelAndView modelAndView = new ModelAndView("session");
+        String nom = new Session(request).getUser();
+        modelAndView.set("connected", nom != null);
+        modelAndView.set("nom", nom == null ? null : Utils.escapeHtml(nom));
+        modelAndView.set("erreur", erreur);
+        return modelAndView;
     }
 }
