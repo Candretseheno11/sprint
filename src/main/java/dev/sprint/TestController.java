@@ -51,7 +51,7 @@ public class TestController {
         return new ModelAndView("upload");
     }
 
-    @Url(value = "/upload", method = HttpMethod.POST)
+  /*   @Url(value = "/upload", method = HttpMethod.POST)
     public ModelAndView uploader(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         ModelAndView modelAndView = new ModelAndView("upload");
@@ -81,7 +81,7 @@ public class TestController {
         }
         return modelAndView;
     }
-
+ */
     @Url(value = "/api/test", method = HttpMethod.POST)
     @AsJson 
     public List<String> enregistrer( @Bind  Inscription inscription) {
