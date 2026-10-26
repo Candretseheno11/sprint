@@ -6,5 +6,7 @@
 <body>
     <h1>Accueil</h1>
     <p>${message}</p>
+    <p><a href="${pageContext.request.contextPath}/session">Tester la session</a></p>
+    <p><a href="${pageContext.request.contextPath}/upload">Tester l’upload de fichier</a></p>
 </body>
 </html>

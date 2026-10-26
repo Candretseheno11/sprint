@@ -10,6 +10,7 @@ import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import main.java.dev.sprint.ModelAndView;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import main.java.dev.sprint.Utils;
 import main.java.dev.sprint.annotation.Controller;
 import main.java.dev.sprint.annotation.Url;
 
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 11 * 1024 * 1024)
 public class FrontControllerServlet extends HttpServlet {
     private String viewFormat;
     private Map<UrlInfo, UrlMapping> actions;
@@ -65,7 +67,10 @@ public class FrontControllerServlet extends HttpServlet {
             try {
                 Object controller = mapping.getController().getDeclaredConstructor().newInstance();
 
-                Map<String, String[]> requestParameters = request.getParameterMap();
+                Map<String, String[]> requestParameters =
+                        request.getContentType() != null && request.getContentType().startsWith("multipart/")
+                                ? Map.of()
+                                : request.getParameterMap();
                 Parameter[] methodParameters = mapping.getMethod().getParameters();
 
                 Object[] mArgs = new Object[methodParameters.length];
