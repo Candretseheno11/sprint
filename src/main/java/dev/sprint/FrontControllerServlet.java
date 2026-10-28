@@ -4,25 +4,26 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import com.google.gson.Gson;
 import java.util.Map;
+import java.util.Set;
+
+import com.google.gson.Gson;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
-import main.java.dev.sprint.ModelAndView;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import main.java.dev.sprint.annotation.AsJson;
 import main.java.dev.sprint.annotation.Bind;
+import main.java.dev.sprint.annotation.Role;
 import main.java.dev.sprint.constant.HttpMethod;
-import main.java.dev.sprint.UrlMapping;
-import main.java.dev.sprint.Utils;
-import main.java.dev.sprint.annotation.Controller;
-import main.java.dev.sprint.annotation.Url;
 
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 11 * 1024 * 1024)
+@SuppressWarnings("unchecked")
 public class FrontControllerServlet extends HttpServlet {
     private String viewFormat;
     private Map<UrlInfo, UrlMapping> actions;
@@ -65,13 +66,30 @@ public class FrontControllerServlet extends HttpServlet {
         if (actions.containsKey(urlInfo)) {
 
             try {
+                Method method = mapping.getMethod();
+                if (!hasRequiredRole(request, method)) {
+                
+                                        response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                            "Accès refusé : rôle utilisateur insuffisant");
+                  /*   response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("text/html;charset=UTF-8");
+                    PrintWriter out = response.getWriter();
+                    out.println("<html>");
+                    out.println("<head><title>Accès refusé</title></head>");
+                    out.println("<body>");
+                    out.println("<h1>Vous ne disposez pas de l'autorisation requise !</h1>");
+                    out.println("</body>");
+                    out.println("</html>");
+                    */ return;
+                }
+
                 Object controller = mapping.getController().getDeclaredConstructor().newInstance();
 
                 Map<String, String[]> requestParameters =
                         request.getContentType() != null && request.getContentType().startsWith("multipart/")
                                 ? Map.of()
                                 : request.getParameterMap();
-                Parameter[] methodParameters = mapping.getMethod().getParameters();
+                Parameter[] methodParameters = method.getParameters();
 
                 Object[] mArgs = new Object[methodParameters.length];
                 for (int i = 0; i < methodParameters.length; i++) {
@@ -100,10 +118,10 @@ public class FrontControllerServlet extends HttpServlet {
                     }
                 }
 
-                Object returnValue = mapping.getMethod().invoke(controller, mArgs);
+                Object returnValue = method.invoke(controller, mArgs);
 
-                if (mapping.getMethod().isAnnotationPresent(AsJson.class)) {
-                    AsJson asJson = (AsJson) mapping.getMethod().getAnnotation(AsJson.class);
+                if (method.isAnnotationPresent(AsJson.class)) {
+                    AsJson asJson = method.getAnnotation(AsJson.class);
                     response.setContentType("application/json");
                     PrintWriter out = response.getWriter();
                     if (asJson.raw()) {
@@ -139,26 +157,59 @@ public class FrontControllerServlet extends HttpServlet {
             }
 
         } else {
-            response.setContentType("text/html");
+            response.setContentType("text/html;charset=UTF-8");
             PrintWriter out = response.getWriter();
             out.println("<html>");
             out.println("<head><title>Sprint</title></head>");
             out.println("<body>");
-            out.println("<h1>Route inconnue!</h1>");
+            out.println("<h1>Route inconnue !</h1>");
             out.println("<p>");
-            out.println("<strong>Actions connues:</strong>");
+            out.println("<strong>Actions connues :</strong>");
             out.println("<ul>");
             for (UrlInfo url : actions.keySet()) {
                 UrlMapping routeMapping = actions.get(url);
-                out.println("<li>" + url.getUrl() + " → " + routeMapping.getController().getName() + "::"
+                out.println("<li>" + url.getUrl() + " → "
+                        + routeMapping.getController().getName() + "::"
                         + routeMapping.getMethod().getName() + "</li>");
             }
             out.println("</ul>");
             out.println("</p>");
-
             out.println("</body>");
             out.println("</html>");
         }
+    }
 
+    private boolean hasRequiredRole(HttpServletRequest request, Method method) {
+        Role methodRole = method.getAnnotation(Role.class);
+        Role classRole = method.getDeclaringClass().getAnnotation(Role.class);
+        Role requiredRole = methodRole != null ? methodRole : classRole;
+
+        if (requiredRole == null) {
+            return true;
+        }
+
+        Set<String> configuredRoles = Session.getConfiguredRoles(getServletContext());
+        boolean roleConfigured = false;
+        for (String role : requiredRole.value()) {
+
+           /*  if(role==null || !configuredRoles.contains(role.trim().toUpperCase(java.util.Locale.ROOT))) {
+                continue;
+            } */
+            if (role != null && configuredRoles.contains(role.trim().toUpperCase(java.util.Locale.ROOT))) {
+                roleConfigured = true;
+                break;
+            }
+        }
+        if (!roleConfigured) {
+            return false;
+        }
+
+        Session session = new Session(request);
+        if (session.getUser() == null) {
+            return false;
+        }
+/*         return session.hasAnyRole(requiredRole.value());
+ */        return session.hasAnyRole(getServletContext(), requiredRole.value());
     }
 }
+    
