@@ -10,6 +10,7 @@ import java.util.List;
 import main.java.dev.sprint.annotation.AsJson;
 import main.java.dev.sprint.annotation.Bind;
 import main.java.dev.sprint.annotation.Controller;
+import main.java.dev.sprint.annotation.Role;
 import main.java.dev.sprint.annotation.Url;
 import main.java.dev.sprint.constant.HttpMethod;
 
@@ -26,6 +27,7 @@ public class TestController {
 
 
     @Url(value = "/api/voiture", method = HttpMethod.GET)
+    @Role("ADMIN")
     @AsJson
     public List<String> getVoitureJson() {
         List<String> voiture = new ArrayList<>();
@@ -119,8 +121,10 @@ public class TestController {
     private ModelAndView creerVueSession(HttpServletRequest request, String erreur) {
         ModelAndView modelAndView = new ModelAndView("session");
         String nom = new Session(request).getUser();
+        Session session = new Session(request);
         modelAndView.set("connected", nom != null);
         modelAndView.set("nom", nom == null ? null : Utils.escapeHtml(nom));
+        modelAndView.set("roles", session.getRoles(request.getServletContext()));
         modelAndView.set("erreur", erreur);
         return modelAndView;
     }

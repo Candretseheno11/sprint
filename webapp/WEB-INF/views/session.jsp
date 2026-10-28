@@ -10,6 +10,7 @@
 
     <% if (Boolean.TRUE.equals(request.getAttribute("connected"))) { %>
         <p>Utilisateur connecté : <strong>${nom}</strong></p>
+        <p>Rôle : <strong>${roles}</strong></p>
         <form action="${pageContext.request.contextPath}/session/logout" method="post">
             <button type="submit">Se déconnecter</button>
         </form>
@@ -20,6 +21,13 @@
         <form action="${pageContext.request.contextPath}/session/login" method="post">
             <label for="nom">Entrer votre nom :</label>
             <input id="nom" name="nom" type="text" required>
+       <%--      <label for="role">Choisir le rôle :</label>
+            <select id="role" name="role">
+                <% java.util.Set<String> availableRoles = (java.util.Set<String>) request.getAttribute("availableRoles"); %>
+                <% if (availableRoles != null) for (String availableRole : availableRoles) { %>
+                    <option value="<%= availableRole %>"><%= availableRole %></option>
+                <% } %>
+            </select> --%>
             <button type="submit">Se connecter</button>
         </form>
     <% } %>
